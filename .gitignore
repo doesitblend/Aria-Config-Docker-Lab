@@ -13,3 +13,4 @@ data/raas/pki/*
 data/redis/redis.conf
 data/srv-salt/*
 data/srv-pillar/*
+*_license
