@@ -13,7 +13,7 @@ function help() {
 	echo "SALT_VERSION Optional. Specifiy the full version of salt to install"
 }
 
-if [[ $1 == "--help" ]]
+if [[ $1 == "--help" || $1 == "-h" ]]
 then
 	help
 	exit 0
