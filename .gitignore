@@ -1,3 +1,5 @@
+.idea
+.DS_Store
 vRA_SaltStack_Config*tar
 vRA_SaltStack_Config*tar.gz
 .env
