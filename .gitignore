@@ -17,3 +17,4 @@ data/srv-salt/*
 data/srv-pillar/*
 data/raas/*
 data/srv-salt/*
+data/master.d/*
