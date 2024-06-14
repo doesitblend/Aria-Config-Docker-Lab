@@ -49,15 +49,17 @@ services:
         salt_version: ${SALT_VERSION}
         plugin_name: ${MASTER_PLUGIN_NAME}
     command: "-l debug"
+    ports:
+      - "8000:8000"
     volumes:
       - ./data/master.d:/etc/salt/master.d
+      - ./data/minion.d:/etc/salt/minion.d
       - ./data/srv-salt:/srv/salt
       - ./data/srv-pillar:/srv/pillar
     depends_on:
       - salt-minion-ubuntu
       - salt-minion-centos
       - salt-minion-debian
-      - salt-minion-fedora
     logging:
       options:
         max-size: "200k"
@@ -111,19 +113,4 @@ services:
         max-size: "200k"
         max-file: "5"
   
-  salt-minion-fedora:
-    build:
-      context: ./build/salt-minion-fedora
-      args:
-        salt_version: ${SALT_VERSION}
-    command: "-l debug"
-    deploy:
-      mode: replicated
-      replicas: 1
-    volumes:
-      - ./data/minion.d:/etc/salt/minion.d
-    logging:
-      options:
-        max-size: "200k"
-        max-file: "5"
 
