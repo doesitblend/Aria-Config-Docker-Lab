@@ -1,0 +1,29 @@
+--- build/salt-master/Dockerfile	2024-05-16 11:04:15
++++ ../Salt-Docker-Lab/build/salt-master/Dockerfile	2024-05-24 09:39:54
+@@ -1,15 +1,15 @@
+ FROM ubuntu:22.04
+-ARG plugin_name
++ENV DEBIAN_FRONTEND=noninteractive
+ ARG salt_version
+-COPY ./eapi_plugin/files/$plugin_name /$plugin_name
+ RUN apt-get update
+-RUN apt-get install -y curl
+-RUN curl -fsSL -o /etc/apt/keyrings/salt-archive-keyring-2023.gpg https://repo.saltproject.io/salt/py3/ubuntu/22.04/amd64/SALT-PROJECT-GPG-PUBKEY-2023.gpg
+-RUN echo "deb [signed-by=/etc/apt/keyrings/salt-archive-keyring-2023.gpg arch=amd64] https://repo.saltproject.io/salt/py3/ubuntu/22.04/amd64/minor/$salt_version jammy main" | tee /etc/apt/sources.list.d/salt.list
+-RUN apt-get update
+-RUN apt-get install -y salt-master
+-RUN salt-pip install /$plugin_name
+-RUN rm SSEAPE*.whl
+-ENTRYPOINT [ "/usr/bin/salt-master" ]
+-CMD [ "-l", "info" ]
++RUN apt-get install -y curl wget supervisor vim
++# Run Salt installer to just add a Salt master, but not start it
++RUN wget -O /install_salt.sh https://bootstrap.saltproject.io/ \
++    && chmod +x /install_salt.sh \
++    && /install_salt.sh -X -M stable $salt_version \
++    && rm -fv /install_salt.sh
++RUN apt-get update && apt-get install salt-api
++COPY supervisord.conf /etc/supervisor/supervisord.conf
++ENTRYPOINT [ "/usr/bin/supervisord" ]
++CMD [ "-c", "/etc/supervisor/supervisord.conf" ]
+ 
