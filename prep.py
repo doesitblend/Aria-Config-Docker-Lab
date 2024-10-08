@@ -138,7 +138,11 @@ def handle_enterprise_mode(salt_version: str):
     prepare_enterprise_bundle()
     write_env_file(salt_version, enterprise=True)
     os.symlink('aria-compose.yaml', 'compose.yaml')
-    os.symlink('./ent-master', 'data/master.d')
+    try:
+        os.symlink('./ent-master', 'data/master.d')
+    except FileExistsError as fe:
+        print("Sym link or directory already exists")
+        pass
     print_file_contents('.env')
     prompt_docker_compose()
 
