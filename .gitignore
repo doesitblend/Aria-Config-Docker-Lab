@@ -12,3 +12,4 @@ data/raas/raas.secconf
 data/raas/pki/*
 data/redis/redis.conf
 __pycache__
+install_salt.sh
