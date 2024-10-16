@@ -109,19 +109,3 @@ services:
       options:
         max-size: "200k"
         max-file: "5"
-
-          #  salt-minion-fedora:
-          #    build:
-          #      context: ./build/salt-minion-fedora
-          #      args:
-          #        salt_version: ${SALT_VERSION}
-          #    command: "-l debug"
-          #    deploy:
-          #      mode: replicated
-          #      replicas: 1
-          #    volumes:
-          #      - ./data/minion.d:/etc/salt/minion.d
-          #    logging:
-          #      options:
-          #        max-size: "200k"
-          #        max-file: "5"
