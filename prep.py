@@ -12,7 +12,8 @@ def clean_environment():
     Cleans up existing build directories and environment files.
     """
     if os.path.exists('compose.yaml'):
-        subprocess.run(['docker', 'compose', 'down'])
+        #subprocess.run(['docker', 'compose', 'down'])
+        subprocess.run(['docker', 'compose', 'down', '--rmi', 'all', '-v'])
 
     directories_to_remove = [
         './build/sse-installer',
