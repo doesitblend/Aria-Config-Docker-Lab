@@ -54,13 +54,31 @@ services:
       - ./data/srv-salt:/srv/salt
       - ./data/srv-pillar:/srv/pillar
     depends_on:
-      - salt-minion-ubuntu
-      - salt-minion-centos
-      - salt-minion-debian
+      - raas
     logging:
       options:
         max-size: "200k"
         max-file: "5"
+  
+          #  salt-master-2:
+          #    platform: "linux/amd64"
+          #    hostname: salt-master-2
+          #    build:
+          #      context: ./build/salt-master
+          #      args:
+          #        salt_version: ${SALT_VERSION}
+          #        plugin_name: ${MASTER_PLUGIN_NAME}
+          #    command: "-l debug"
+          #    volumes:
+          #      - ./data/master.d:/etc/salt/master.d
+          #      - ./data/srv-salt:/srv/salt
+          #      - ./data/srv-pillar:/srv/pillar
+          #    depends_on:
+          #      - raas
+          #    logging:
+          #      options:
+          #        max-size: "200k"
+          #        max-file: "5"
 
   salt-minion-ubuntu:
     build:
