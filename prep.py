@@ -12,8 +12,7 @@ def clean_environment():
     Cleans up existing build directories and environment files.
     """
     if os.path.exists('compose.yaml'):
-        #subprocess.run(['docker', 'compose', 'down'])
-        subprocess.run(['docker', 'compose', 'down', '--rmi', 'all', '-v'])
+        subprocess.run(['docker', 'compose', 'down', '-v', '--rmi', 'local'])
 
     directories_to_remove = [
         './build/sse-installer',
@@ -96,7 +95,7 @@ def prepare_enterprise_bundle():
     installer_bundle = glob.glob('vRA_SaltStack_Config*.tar.gz')
     if installer_bundle:
         with tarfile.open(installer_bundle[0], 'r:gz') as tar:
-            tar.extractall(path='build')
+            tar.extractall(path='build', filter='tar')
     else:
         print("Installer bundle not found.")
     shutil.copytree('build/sse-installer/salt/sse/eapi_service', 'build/raas/eapi_service')
@@ -139,11 +138,7 @@ def handle_enterprise_mode(salt_version: str):
     prepare_enterprise_bundle()
     write_env_file(salt_version, enterprise=True)
     os.symlink('aria-compose.yaml', 'compose.yaml')
-    try:
-        os.symlink('./ent-master', 'data/master.d')
-    except FileExistsError as fe:
-        print("Sym link or directory already exists")
-        pass
+    os.symlink('./ent-master', 'data/master.d')
     print_file_contents('.env')
     prompt_docker_compose()
 
@@ -154,9 +149,8 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--clean', help='Clean up build dirs', action='store_true')
-    parser.add_argument('-o', '--open-source', help='Prep open source bits', action='store_true')
     parser.add_argument('-e', '--enterprise', help='Prep enterprise bits', action='store_true')
-    parser.add_argument('salt_version', nargs='?', default='3007.1', help='Which version of salt to use. Defaults to 3007.1')
+    parser.add_argument('salt_version', nargs='?', default='3006.9', help='Which version of salt to use. Defaults to 3006.9')
     args = parser.parse_args()
 
     if args.clean:
@@ -164,13 +158,11 @@ def main():
         print("Build environment cleaned")
         return
 
-    if args.open_source:
-        handle_oss_mode(args.salt_version)
-        return
-
     if args.enterprise:
         handle_enterprise_mode(args.salt_version)
         return
+
+    handle_oss_mode(args.salt_version)
 
 if __name__ == "__main__":
     main()
