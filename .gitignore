@@ -18,3 +18,5 @@ sse-installer
 .idea/
 data/*
 data/ent-master/*
+*.bak
+*.old
