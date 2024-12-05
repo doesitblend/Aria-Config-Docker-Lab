@@ -10,6 +10,8 @@ services:
       options:
         max-size: "200k"
         max-file: "5"
+    networks:
+      - saltnet
 
   redis:
     image: redis:6
@@ -20,6 +22,9 @@ services:
       options:
         max-size: "200k"
         max-file: "5"
+    networks:
+      - saltnet
+
 
   raas:
     platform: "linux/amd64"
@@ -27,6 +32,7 @@ services:
       context: ./build/raas
       args:
         filename: ${RAAS_RPM_NAME}
+        salt_version: ${SALT_VERSION}
     command: "-l debug"
     ports:
       - "8080:8080"
@@ -39,6 +45,8 @@ services:
       options:
         max-size: "200k"
         max-file: "5"
+    networks:
+      - saltnet
 
   salt-master:
     platform: "linux/amd64"
@@ -59,26 +67,8 @@ services:
       options:
         max-size: "200k"
         max-file: "5"
-  
-          #  salt-master-2:
-          #    platform: "linux/amd64"
-          #    hostname: salt-master-2
-          #    build:
-          #      context: ./build/salt-master
-          #      args:
-          #        salt_version: ${SALT_VERSION}
-          #        plugin_name: ${MASTER_PLUGIN_NAME}
-          #    command: "-l debug"
-          #    volumes:
-          #      - ./data/master.d:/etc/salt/master.d
-          #      - ./data/srv-salt:/srv/salt
-          #      - ./data/srv-pillar:/srv/pillar
-          #    depends_on:
-          #      - raas
-          #    logging:
-          #      options:
-          #        max-size: "200k"
-          #        max-file: "5"
+    networks:
+      - saltnet
 
   salt-minion-ubuntu:
     build:
@@ -95,6 +85,8 @@ services:
       options:
         max-size: "200k"
         max-file: "5"
+    networks:
+      - saltnet
 
   salt-minion-centos:
     build:
@@ -111,6 +103,8 @@ services:
       options:
         max-size: "200k"
         max-file: "5"
+    networks:
+      - saltnet
 
   salt-minion-debian:
     build:
@@ -127,3 +121,12 @@ services:
       options:
         max-size: "200k"
         max-file: "5"
+    networks:
+      - saltnet
+
+networks:
+  saltnet:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+
