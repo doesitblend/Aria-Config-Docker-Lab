@@ -28,16 +28,28 @@ services:
 
   raas:
     platform: "linux/amd64"
-    build:
-      context: ./build/raas
-      args:
-        filename: ${RAAS_RPM_NAME}
-        salt_version: ${SALT_VERSION}
-    command: "-l debug"
+    image: raas-c9-prod:8.18.0.21
+      #    build:
+      #      context: ./build/raas
+      #      args:
+      #        filename: ${RAAS_RPM_NAME}
+      #        salt_version: ${SALT_VERSION}
+      #command: "-l debug"
     ports:
       - "8080:8080"
     volumes:
-      - ./data/raas:/etc/raas
+      # Example CLI to start container
+      # docker run --restart unless-stopped -d --name raas -p 8080:8080 \
+      #-v ./data/raas/config:/etc/raas \
+      #-v ./data/raas/srv:/srv \
+      #-v ./data/raas/cache:/var/cache/raas \
+      #-v ./data/raas/log:/var/log/raas \
+      #--network=aria-config-docker-lab_saltnet raas-c9-prod:8.18.0.21
+      #- ./data/raas:/etc/raas
+      - ./data/raas/config:/etc/raas
+      - ./data/raas/cache:/var/cache/raas
+      - ./data/raas/log:/var/log/raas
+      - ./data/raas/srv:/srv
     depends_on:
       - postgres
       - redis
