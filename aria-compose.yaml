@@ -28,15 +28,23 @@ services:
 
   raas:
     platform: "linux/amd64"
-    image: raas-c9-prod:8.18.0.21
+    image: raas-c9-prod:8.18.0.24
       #    build:
       #      context: ./build/raas
       #      args:
       #        filename: ${RAAS_RPM_NAME}
       #        salt_version: ${SALT_VERSION}
       #command: "-l debug"
+    restart: "unless-stopped"
+    healthcheck: 
+      test: ["CMD", "curl", "-sSk", "https://localhost/readyz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+      start_interval: 5s
     ports:
-      - "8080:8080"
+      - "443:443"
     volumes:
       # Example CLI to start container
       # docker run --restart unless-stopped -d --name raas -p 8080:8080 \
@@ -50,6 +58,7 @@ services:
       - ./data/raas/cache:/var/cache/raas
       - ./data/raas/log:/var/log/raas
       - ./data/raas/srv:/srv
+      - ./data/raas/pki:/etc/pki
     depends_on:
       - postgres
       - redis
@@ -92,11 +101,12 @@ services:
       mode: replicated
       replicas: 1
     volumes:
-      - ./data/minion1.d:/etc/salt/minion.d
+      - ./data/ubuntu-scale:/etc/salt/minion.d
     logging:
       options:
         max-size: "200k"
         max-file: "5"
+    hostname: "{{.Service.Name}}-{{.Task.Slot}}"
     networks:
       - saltnet
 
