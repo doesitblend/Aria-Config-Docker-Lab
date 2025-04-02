@@ -1,0 +1,203 @@
+services:
+  postgres:
+    image: postgres:15.4
+    restart: "unless-stopped"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASS}
+    volumes:
+      #- pg-data:/var/lib/postgresql/data
+      - ./data/postgres:/var/lib/postgresql/data
+    logging:
+      options:
+        max-size: "200k"
+        max-file: "5"
+    networks:
+      - saltnet
+
+  redis:
+    image: redis:6
+    restart: "unless-stopped"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: 'redis-server --requirepass "$REDIS_PASSWORD"'
+    logging:
+      options:
+        max-size: "200k"
+        max-file: "5"
+    ports:
+      - "6379:6379"
+    networks:
+      - saltnet
+
+
+  raas:
+    platform: "linux/amd64"
+    image: local/raas-c9-prod:8.18.1.0
+      #    build:
+      #      context: ./build/raas
+      #      args:
+      #        filename: ${RAAS_RPM_NAME}
+      #        salt_version: ${SALT_VERSION}
+      #command: "-l debug"
+    restart: "unless-stopped"
+    mem_limit: 5g
+    healthcheck: 
+      test: ["CMD", "curl", "-sSk", "https://localhost:4443/readyz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+      start_interval: 5s
+    ports:
+      - "4443:4443"
+    volumes:
+#      - raas-config:/etc/raas
+#      - raas-cache:/var/cache/raas
+#      - raas-log:/var/log/raas
+#      - raas-srv:/srv
+#      - raas-pki:/etc/pki
+      # Example CLI to start container
+      # docker run --restart unless-stopped -d --name raas -p 8080:8080 \
+      #-v ./data/raas/config:/etc/raas \
+      #-v ./data/raas/srv:/srv \
+      #-v ./data/raas/cache:/var/cache/raas \
+      #-v ./data/raas/log:/var/log/raas \
+      #--network=aria-config-docker-lab_saltnet raas-c9-prod:8.18.0.21
+      - ./data/raas:/etc/raas
+      - ./data/raas/config:/etc/raas
+      - ./data/raas/cache:/var/cache/raas
+      - ./data/raas/log:/var/log/raas
+      - ./data/raas/srv:/srv
+      - ./data/raas/pki:/etc/pki
+    depends_on:
+      - postgres
+      - redis
+    logging:
+      options:
+        max-size: "200k"
+        max-file: "5"
+    hostname: raas
+    networks:
+      - saltnet
+
+  salt-master:
+    restart: "unless-stopped"
+    platform: "linux/amd64"
+    hostname: salt-master
+    build:
+      context: ./build/salt-master
+      args:
+        salt_version: ${SALT_VERSION}
+        plugin_name: ${MASTER_PLUGIN_NAME}
+    command: "-l debug"
+    volumes:
+#      - master-config:/etc/salt/master.d
+#      - salt-states:/srv/salt
+#      - salt-pillar:/srv/pillar
+      - ./data/master.d:/etc/salt/master.d
+      - ./data/srv-salt:/srv/salt
+      - ./data/srv-pillar:/srv/pillar
+    depends_on:
+      - raas
+    logging:
+      options:
+        max-size: "200k"
+        max-file: "5"
+    ports:
+      - "4505:4505"
+      - "4506:4506"
+    networks:
+      - saltnet
+
+  salt-minion-ubuntu:
+    restart: "unless-stopped"
+    build:
+      context: ./build/salt-minion-ubuntu
+      args:
+        salt_version: ${SALT_VERSION}
+    command: "-l debug"
+    deploy:
+      mode: replicated
+      replicas: 1
+    volumes:
+      - ./data/ubuntu-scale:/etc/salt/minion.d
+      #- ./data/minion1.d:/etc/salt/minion.d
+      #- minion-data:/etc/salt/minion.d
+    logging:
+      options:
+        max-size: "200k"
+        max-file: "5"
+    networks:
+      - saltnet
+
+
+  salt-minion-debian:
+    restart: "unless-stopped"
+    build:
+      context: ./build/salt-minion-debian
+      args:
+        salt_version: ${SALT_VERSION}
+    command: "-l debug"
+    deploy:
+      mode: replicated
+      replicas: 1
+    volumes:
+      #- minion-data:/etc/salt/minion.d
+      - ./data/minion3.d:/etc/salt/minion.d
+      #- minion-data:/etc/salt/minion.d
+    logging:
+      options:
+        max-size: "200k"
+        max-file: "5"
+    networks:
+      - saltnet
+
+#  salt-minion-centos:
+#    restart: "unless-stopped"
+#    build:
+#      context: ./build/salt-minion-centos
+#      args:
+#        salt_version: ${SALT_VERSION}
+#    command: "-l debug"
+#    deploy:
+#      mode: replicated
+#      replicas: 1
+#    volumes:
+#      - ./data/minion2.d:/etc/salt/minion.d
+#    logging:
+#      options:
+#        max-size: "200k"
+#        max-file: "5"
+#    networks:
+#      - saltnet
+
+networks:
+  saltnet:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+
+#volumes: 
+#  pg-data:
+#    driver: local
+#  raas-config:
+#    driver: local
+#  raas-cache:
+#    driver: local
+#  raas-log:
+#    driver: local
+#  raas-srv:
+#    driver: local
+#  raas-pki:
+#    driver: local
+#  master-config:
+#    driver: local
+#  salt-pillar:
+#    driver: local
+#  salt-states:
+#    driver: local
+#  minion-data:
+#    driver: local
+
+
